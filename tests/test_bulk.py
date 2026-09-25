@@ -11,13 +11,6 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from api import FreedcampAPI  # noqa: E402
-from client import FreedcampClient  # noqa: E402
-
-
-@pytest.fixture(scope="module")
-def api():
-    return FreedcampAPI(FreedcampClient())
 
 
 @pytest.fixture(scope="module")
@@ -28,10 +21,8 @@ def sandbox(api):
         group_id=groups[0]["group_id"], group_name=groups[0]["name"],
         description="jetable")
     yield p["project_id"]
-    try:
-        api.project_archive(p["project_id"])
-    except Exception:
-        pass
+    # Pas de `except: pass` ici : un nettoyage qui echoue doit se voir.
+    api.project_archive(p["project_id"])
 
 
 def test_create_bulk_cree_tout_le_lot(api, sandbox):

@@ -126,8 +126,29 @@ class FreedcampAPI:
         return self.project_get(pid)
 
     def project_archive(self, project_id):
-        self.client.post("projects/%s" % project_id, {"f_archived": 1})
-        return {"project_id": str(project_id), "archived": True}
+        """Archive un projet et RELIT son etat pour le prouver.
+
+        Piege verifie : le champ d'archivage est `f_active: 0`, PAS
+        `f_archived`. `f_archived`, `archived` et `status` renvoient tous
+        `200 OK` et ne font rien — l'API acquiesce sans agir. Un archivage
+        qui se contente du code HTTP est donc un mensonge.
+        """
+        self.client.post("projects/%s" % project_id, {"f_active": 0})
+        etat = self._project_state(project_id)
+        if etat is not None and etat.get("f_active"):
+            raise FreedcampError(
+                0, "archivage refuse par l'API : le projet %s est toujours "
+                   "actif apres la requete" % project_id)
+        return {"project_id": str(project_id), "archived": True,
+                "archived_ts": (etat or {}).get("archived_ts")}
+
+    def _project_state(self, project_id):
+        """Etat courant d'un projet, ou None s'il n'est plus liste."""
+        data = self.client.get("projects")
+        for p in (data.get("data") or {}).get("projects") or []:
+            if str(p.get("project_id")) == str(project_id):
+                return p
+        return None
 
     def groups(self):
         raw = self.client.payload(self.client.get("groups"), "groups")

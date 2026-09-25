@@ -38,10 +38,9 @@ def sandbox(api):
                            description="jetable")
     pid = p["project_id"]
     yield pid
-    try:
-        api.project_archive(pid)
-    except Exception:
-        pass
+    # Pas de `except: pass` : un archivage qui echoue doit etre visible,
+    # sinon le projet jetable reste dans l'espace de travail reel.
+    api.project_archive(pid)
 
 
 @pytest.fixture(scope="session")

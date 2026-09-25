@@ -193,6 +193,8 @@ wrong. This table is arguably the most useful part of the repository.
 | **Creating a project** | Requires **both** `group_id` and `group_name`. |
 | **Creating a milestone** | `priority` is mandatory. |
 | **Reading comments** | Via `GET /tasks/{id}` → `comments` field. `GET /comments?item_id=` returns 404. |
+| **Archiving a project** | The field is **`f_active: 0`**, not `f_archived`. `f_archived`, `archived` and `status` all return `200 OK` and **do nothing**. A project you believe archived stays visible in the user's workspace. |
+| **Deleting a project** | `DELETE /projects/<id>` returns **501 — not available publicly**. Archiving is the only exit; a project created by mistake can never be erased. |
 | **Rate limit** | Strict, recovery window measured in **minutes**. The client retries 429/5xx with 5s/15s/45s/135s backoff. Never run two Freedcamp workloads in parallel. |
 | **UTF-8 on Windows** | A subprocess' stdout defaults to cp1252 and silently mangles accented labels. `sys.stdout.reconfigure(encoding="utf-8")` is required. |
 
@@ -202,9 +204,16 @@ wrong. This table is arguably the most useful part of the repository.
 python -m pytest tests/ -q
 ```
 
-**Zero mocks.** Everything runs against the live API inside a throwaway sandbox
-project, archived on teardown. Mocks would have hidden every pitfall above —
-each one is a gap between documented and actual behaviour.
+**Zero mocks.** Everything runs against the live API inside throwaway sandbox
+projects, archived on teardown, plus a session-wide safety net that archives any
+`ZZ *` project left active — loudly reporting failures rather than swallowing
+them. Mocks would have hidden every pitfall above — each one is a gap between
+documented and actual behaviour.
+
+> A teardown that swallows its own failure (`except Exception: pass`) is worse
+> than no teardown: seventeen sandbox projects once polluted a real workspace
+> because the archive call was broken *and* silenced. Cleanup code must verify
+> and must shout.
 
 `FC_TEST_THROTTLE` (default 1.5 s) spaces calls to stay under the rate limit.
 A full run takes ~20 minutes; that is the API's constraint, not the code's.
