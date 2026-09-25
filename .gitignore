@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# configuration locale des tests : identifiants de projets propres a un compte
+tests/local_config.json
