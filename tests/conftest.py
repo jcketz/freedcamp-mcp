@@ -42,10 +42,28 @@ def api():
 def groupe_test(api):
     """Groupe ou creer les projets jetables.
 
-    Renvoie le groupe COMPLET, pas seulement son id : `project_create`
-    exige `group_id` ET `group_name` (piege documente dans le README).
+    Choisi explicitement, jamais au hasard : `groups()[0]` peut viser un
+    groupe metier reel (celui qui contient les vrais projets) ou un groupe
+    supprime entre deux sessions. On lit donc `tests/local_config.json`
+    (cle `test_group_id`) et, a defaut, on prend le dernier groupe de la
+    liste — le plus recent, donc le moins susceptible d'etre structurant.
+
+    ATTENTION : ne jamais passer `group_name` a `project_create`, l'API
+    creerait un groupe en double (irreparable, voir test_groupes.py).
     """
-    return api.groups()[0]
+    import local_config
+
+    groupes = api.groups()
+    assert groupes, "aucun groupe accessible avec ces identifiants"
+
+    voulu = local_config.test_group_id()
+    if voulu:
+        for g in groupes:
+            if str(g["group_id"]) == str(voulu):
+                return g
+        pytest.skip("groupe de test %s introuvable (supprime ?)" % voulu)
+
+    return groupes[-1]
 
 
 @pytest.fixture(scope="session", autouse=True)

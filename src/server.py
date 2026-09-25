@@ -256,13 +256,13 @@ def _comment_add(task_id, text):
 
 
 @tool("fc_project_create",
-      "Cree un projet. group_id ET group_name sont requis par l'API "
-      "(voir fc_groups).",
-      _required=("name", "group_id", "group_name"),
+      "Cree un projet dans un groupe EXISTANT (voir fc_groups). "
+      "N'envoie jamais group_name : l'API creerait un groupe en double.",
+      _required=("name", "group_id"),
       name={"type": "string"}, group_id={"type": "string"},
-      group_name={"type": "string"}, description={"type": "string"})
-def _project_create(name, group_id, group_name, description=""):
-    return api().project_create(name, group_id, group_name, description)
+      description={"type": "string"})
+def _project_create(name, group_id, description=""):
+    return api().project_create(name, group_id, description=description)
 
 
 @tool("fc_project_archive", "Archive un projet.",

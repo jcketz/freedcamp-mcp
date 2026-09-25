@@ -29,8 +29,7 @@ def _etat(api, pid):
 def test_archive_rend_le_projet_inactif(api, groupe_test):
     """Apres archivage, f_active doit etre faux ET archived_ts renseigne."""
     nom = "ZZ archive %s" % datetime.datetime.now().strftime("%H%M%S%f")
-    proj = api.project_create(nom, group_id=groupe_test["group_id"],
-                              group_name=groupe_test["name"])
+    proj = api.project_create(nom, group_id=groupe_test["group_id"])
     pid = proj["project_id"]
 
     avant = _etat(api, pid)
@@ -56,8 +55,7 @@ def test_f_archived_ne_marche_pas(api, groupe_test):
     apprendra que le champ est devenu fonctionnel.
     """
     nom = "ZZ faux ami %s" % datetime.datetime.now().strftime("%H%M%S%f")
-    proj = api.project_create(nom, group_id=groupe_test["group_id"],
-                              group_name=groupe_test["name"])
+    proj = api.project_create(nom, group_id=groupe_test["group_id"])
     pid = proj["project_id"]
 
     api.client.post("projects/%s" % pid, {"f_archived": 1})
@@ -78,8 +76,7 @@ def test_suppression_de_projet_indisponible(api, groupe_test):
     ne peut pas etre efface, seulement masque.
     """
     nom = "ZZ delete %s" % datetime.datetime.now().strftime("%H%M%S%f")
-    proj = api.project_create(nom, group_id=groupe_test["group_id"],
-                              group_name=groupe_test["name"])
+    proj = api.project_create(nom, group_id=groupe_test["group_id"])
     pid = proj["project_id"]
 
     with pytest.raises(FreedcampError) as exc:

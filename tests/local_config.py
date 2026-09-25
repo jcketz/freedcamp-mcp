@@ -50,6 +50,16 @@ def reference_milestone_id():
             or _CONF.get("reference_milestone_id"))
 
 
+def test_group_id():
+    """Groupe ou les tests ont le droit de creer des projets jetables.
+
+    A declarer explicitement : sans lui, les tests ecrivent dans un groupe
+    choisi par defaut, qui peut etre un groupe metier reel.
+    """
+    return (os.environ.get("FC_TEST_GROUP_ID")
+            or _CONF.get("test_group_id"))
+
+
 def credentials_path():
     """Chemin du fichier d'identifiants, pour le test d'etancheite."""
     from client import _secrets_path

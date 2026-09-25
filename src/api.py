@@ -101,7 +101,11 @@ class FreedcampAPI:
             out.append({
                 "project_id": str(p.get("project_id")),
                 "name": p.get("project_name"),
+                "group_id": str(p.get("group_id")) if p.get("group_id") else None,
+                "group_name": p.get("group_name"),
+                # Conserve pour compatibilite : ancien nom du champ.
                 "group": p.get("group_name"),
+                "active": bool(p.get("f_active")),
                 "description": p.get("project_description") or "",
                 "apps": p.get("applications") or [],
             })
@@ -113,17 +117,33 @@ class FreedcampAPI:
                 return p
         raise FreedcampError(404, "projet %s introuvable" % project_id)
 
-    def project_create(self, name, group_id, group_name, description=""):
-        if not group_id or not group_name:
+    def project_create(self, name, group_id, description=""):
+        """Cree un projet DANS un groupe existant.
+
+        Piege majeur, decouvert en production : passer `group_name` fait
+        **creer un nouveau groupe** portant ce nom, au lieu de reutiliser
+        `group_id`. Vingt-neuf groupes « Maison » et « Village Gaulois »
+        en double ont ainsi pollue l'espace de travail reel — et un groupe
+        ne peut etre ni supprime ni archive par l'API (501), donc le degat
+        est definitif sans intervention manuelle.
+
+        `group_id` seul suffit et range le projet au bon endroit.
+        `group_name` n'est donc jamais transmis.
+        """
+        if not group_id:
             raise FreedcampError(
-                400, "group_id ET group_name sont requis par l'API pour creer "
-                     "un projet (voir fc_groups).")
+                400, "group_id est requis pour creer un projet (voir fc_groups).")
         resp = self.client.post("projects", {
             "project_name": name, "group_id": int(group_id),
-            "group_name": group_name, "description": description})
+            "description": description})
         created = self.client.payload(resp, "projects")
         pid = str(created[0]["project_id"]) if created else None
-        return self.project_get(pid)
+        projet = self.project_get(pid)
+        if str(projet.get("group_id")) != str(group_id):
+            raise FreedcampError(
+                0, "le projet %s a ete cree dans le groupe %s au lieu de %s"
+                   % (pid, projet.get("group_id"), group_id))
+        return projet
 
     def project_archive(self, project_id):
         """Archive un projet et RELIT son etat pour le prouver.

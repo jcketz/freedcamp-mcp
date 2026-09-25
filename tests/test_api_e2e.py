@@ -28,13 +28,13 @@ def api():
 
 
 @pytest.fixture(scope="session")
-def sandbox(api):
-    """Projet jetable. Detruit en teardown quoi qu'il arrive."""
-    groups = api.groups()
-    assert groups, "aucun groupe disponible"
-    gid = groups[0]["group_id"]
+def sandbox(api, groupe_test):
+    """Projet jetable, cree dans le groupe bac a sable declare.
+
+    Jamais `groups()[0]` : ce serait ecrire dans un groupe metier reel.
+    """
     p = api.project_create("ZZ MCP test %s" % datetime.datetime.now().strftime("%H%M%S"),
-                           group_id=gid, group_name=groups[0]["name"],
+                           group_id=groupe_test["group_id"],
                            description="jetable")
     pid = p["project_id"]
     yield pid
@@ -80,7 +80,7 @@ def test_project_get_par_id(api, sandbox):
 
 def test_project_create_exige_un_groupe(api):
     with pytest.raises(FreedcampError):
-        api.project_create("ZZ sans groupe", group_id=None, group_name=None)
+        api.project_create("ZZ sans groupe", group_id=None)
 
 
 # ----------------------------------------------------------------- listes

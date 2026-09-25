@@ -1,4 +1,5 @@
 {
   "reference_project_id": "PROJECT_ID_WITH_MILESTONES_APP_ENABLED",
-  "reference_milestone_id": "OPTIONAL_MILESTONE_ID"
+  "reference_milestone_id": "OPTIONAL_MILESTONE_ID",
+  "test_group_id": "GROUP_ID_WHERE_TESTS_MAY_CREATE_THROWAWAY_PROJECTS"
 }

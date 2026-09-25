@@ -124,6 +124,14 @@ class FreedcampClient:
                     message += " | " + json.dumps(errors, ensure_ascii=False)[:200]
             except ValueError:
                 pass
+            # "Project/Group was deleted or you have no access to it" est
+            # le message le plus trompeur de cette API : il sort aussi bien
+            # pour une ressource effacee sous nos pieds que pour un droit
+            # manquant. On le rend actionnable plutot que de le repeter.
+            if "was deleted or you have no access" in raw:
+                message += (" — la ressource a disparu ou n'est plus "
+                            "accessible ; verifier qu'elle n'a pas ete "
+                            "supprimee en parallele")
             raise FreedcampError(exc.code, self._scrub(message), payload)
         except urllib.error.URLError as exc:
             if _retries > 0:

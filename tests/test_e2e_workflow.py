@@ -67,10 +67,13 @@ def mcp():
 @pytest.fixture(scope="module")
 def projet(mcp):
     groups = mcp.call("fc_groups")
-    g = groups[0]
+    voulu = local_config.test_group_id()
+    g = next((x for x in groups if str(x["group_id"]) == str(voulu)), None) \
+        if voulu else groups[-1]
+    assert g, "groupe de test %s introuvable" % voulu
     p = mcp.call("fc_project_create",
                  name="ZZ E2E %s" % datetime.datetime.now().strftime("%H%M%S"),
-                 group_id=g["group_id"], group_name=g["name"],
+                 group_id=g["group_id"],
                  description="E2E jetable")
     yield p["project_id"]
     mcp.call("fc_project_archive", project_id=p["project_id"])

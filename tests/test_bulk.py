@@ -13,12 +13,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 
 
-@pytest.fixture(scope="module")
-def sandbox(api):
-    groups = api.groups()
+@pytest.fixture(scope="session")
+def sandbox(api, groupe_test):
     p = api.project_create(
         "ZZ bulk %s" % datetime.datetime.now().strftime("%H%M%S"),
-        group_id=groups[0]["group_id"], group_name=groups[0]["name"],
+        group_id=groupe_test["group_id"],
         description="jetable")
     yield p["project_id"]
     # Pas de `except: pass` ici : un nettoyage qui echoue doit se voir.
