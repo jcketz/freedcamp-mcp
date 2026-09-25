@@ -190,7 +190,8 @@ wrong. This table is arguably the most useful part of the repository.
 | **Server-side filters** | `status`, `assigned_to_id`, `q`, `order` are **ignored**. Only `limit`/`offset` work. Filter client-side. |
 | **Tags** | `tags`, `tag_names`, `new_tags`, `item_tags` all return `200 OK` and **persist nothing**. Not exposed here on purpose: a tool that silently no-ops is worse than a missing one. |
 | **Enabling an app** | Not possible via API. Milestones must be enabled in the web UI (*Project Settings → Apps*). A fresh project ships without it. |
-| **Creating a project** | Requires **both** `group_id` and `group_name`. |
+| **Creating a project** | Send `group_id` **only**. Adding `group_name` makes the API **create a new group** with that name instead of filing the project into the group you asked for — silently. Duplicate groups accumulate and can never be removed (see below). |
+| **Deleting or archiving a group** | Impossible. `DELETE /groups/<id>` and `f_active: 0` both fail (501, or 400 depending on the group). A group created by mistake must be removed by hand in the web UI. |
 | **Creating a milestone** | `priority` is mandatory. |
 | **Reading comments** | Via `GET /tasks/{id}` → `comments` field. `GET /comments?item_id=` returns 404. |
 | **Archiving a project** | The field is **`f_active: 0`**, not `f_archived`. `f_archived`, `archived` and `status` all return `200 OK` and **do nothing**. A project you believe archived stays visible in the user's workspace. |
@@ -216,7 +217,21 @@ documented and actual behaviour.
 > and must shout.
 
 `FC_TEST_THROTTLE` (default 1.5 s) spaces calls to stay under the rate limit.
-A full run takes ~20 minutes; that is the API's constraint, not the code's.
+A full run takes ~40 minutes; that is the API's constraint, not the code's.
+
+> **Do not use Freedcamp while the suite runs.** The sandbox project lives for
+> the whole session: deleting or reorganising anything in the UI mid-run makes
+> unrelated tests fail with `Project was deleted or you have no access to it`.
+
+Declare a sandbox group in `tests/local_config.json` so tests never write into
+a real one:
+
+```json
+{"test_group_id": "1234567"}
+```
+
+Without it, tests fall back to the last group in the list and may create
+throwaway projects among your real ones.
 
 `cleanup_sandbox.py` archives leftover `ZZ *` sandbox projects.
 
